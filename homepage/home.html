@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cale's start page</title>
+    <meta charset="utf-8">
+    <style>
+      body {
+        font-family: Arial !important;
+      }
+  
+      .favicon {
+        height: 64px;
+        width: 64px;
+        padding: 5px;
+      }
+
+      #feedTable tr td {
+        vertical-align: top;
+      }
+
+      .rssImg {
+        height: 60px;
+        max-width: 100px;
+        width: auto;
+      }
+
+      .innerFeedTable {
+        table-layout: fixed;
+        width: 420px;
+      }
+
+      .innerFeedTable tr td a {
+        text-decoration: none;
+        color: #001a4d;
+      }
+
+      #techNewsTable tr td {
+        padding-top: 10px;
+      }
+
+      .imgcol {
+        width: 25%;
+        overflow: hidden;
+      }
+
+      .titlecol {
+        width: 75%;
+      }
+
+      .feedDiv {
+        padding-left: 30px;
+        border: 1px solid gray;
+      }
+
+      .bookmarkDiv {
+        width: 80px;
+        height: 80px;
+        float: left;
+      }
+
+      .favorites {
+      }
+ 
+      .weather {
+        position: relative;
+        float: left;
+        clear: both;
+        width: 100%;
+      }
+
+      .feeds {
+        position: relative;
+        float: left;
+        clear: both;
+      }
+    </style>
+
+    <script>
+      !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src='https://weatherwidget.io/js/widget.min.js';fjs.parentNode.insertBefore(js,fjs);}}(document,'script','weatherwidget-io-js');
+    </script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <script type="text/javascript">
+      //var newsFeedURL = "https://rss.msn.com/";
+      var newsFeedURL = "https://feeds.feedblitz.com/usatoday-NewsTopStories";
+      //var newsFeedURL = "https://www.huffpost.com/section/front-page/feed?x=1";
+      var dealsFeedURL = "http://dealnews.a.ssl.fastly.net/dealnews/rss/todays-edition.xml";
+      var techNewsURL = "http://rss.slashdot.org/Slashdot/slashdotMain";
+
+      var feedElem = document.getElementById("newsFeed");
+      var feedLimit = 10;
+
+      $.ajaxSetup({
+        beforeSend: function(request) {
+          request.setRequestHeader("User-Agent","na");
+        }
+      });
+
+      $.ajax({
+        url: newsFeedURL,
+        method: 'GET',
+        accepts: {
+          xml: "application/rss+xml"
+        },
+        dataType: 'xml',
+        cache: false,
+        success: function (response) {
+          var feedHtml = "<table class='innerFeedTable'><thead><tr><th class='imgcol'></th><th class='titlecol'></th></tr></thead>";
+          var threadCount = 0;
+          $(response).find("item").each(function() {
+            var item = $(this);
+            /*
+            var htmlElem = $.parseHTML(item.find("description").text());
+            var imgHtml = "";
+
+            $.each(htmlElem, function(i, el) {
+              if (el.nodeName == "IMG") {
+                el.setAttribute("class","rssImg");
+                imgHtml = el.outerHTML;
+                return false;
+              }
+            });
+            */
+
+            var imgHtml = "<img class='rssImg' src='" + item.find("enclosure").attr("url") + "' />";
+ 
+            feedHtml += "<tr><td><a href='" + item.find("link").text() + "'>" + imgHtml + "</a></td><td><a href='" + item.find("link").text() + "'>" + item.find("title").text() + "</a></td></tr>";
+            threadCount++;
+            if (threadCount >= feedLimit) {
+              return false;
+            }
+          });
+          feedHtml += "</table>";
+          $('#newsFeed').html(feedHtml);
+          $('#newsFeed').find("td").mouseover(function() {
+            $(this).css("background", "#cce6ff");
+            $(this).siblings("td").css("background", "#cce6ff");
+          });
+
+          $("#newsFeed").find("td").mouseout(function() {
+            $(this).css("background", "none");
+            $(this).siblings("td").css("background", "none");
+          });
+        }
+      });
+
+      $.ajax({
+        url: dealsFeedURL,
+        method: 'GET',
+        dataType: 'xml',
+        crossDomain: true,
+        cache: false,
+        success: function (response) {
+          var feedHtml = "<table class='innerFeedTable'><thead><tr><th class='imgcol'></th><th class='titlecol'></th></tr></thead>";
+          var threadCount = 0;
+          $(response).find("item").each(function() {
+            var item = $(this);
+            var htmlElem = $.parseHTML(item.find("description").text());
+            var imgHtml = "";
+            $.each(htmlElem, function(i, el) {
+              if (el.nodeName == "IMG") {
+                el.setAttribute("class","rssImg");
+                imgHtml = el.outerHTML;
+                return false;
+              }
+            });
+            
+            feedHtml += "<tr><td><a href='" + item.find("link").text() + "'>" + imgHtml  + "</a></td><td><a href='" + item.find("link").text() + "'>" + item.find("title").text() + "</a></td></tr>";
+            threadCount++;
+            if (threadCount >= feedLimit) {
+              return false;
+            }
+          });
+          feedHtml += "</table>";
+          $('#dealFeed').html(feedHtml);
+
+          $('#dealFeed').find("td").mouseover(function() {
+            $(this).css("background", "#cce6ff");
+            $(this).siblings("td").css("background", "#cce6ff");
+          });
+
+          $("#dealFeed").find("td").mouseout(function() {
+            $(this).css("background", "none");
+            $(this).siblings("td").css("background", "none");
+          });
+        }
+      });
+
+
+      $.ajax({
+        url: techNewsURL,
+        method: 'GET',
+        accepts: {
+          xml: "application/rss+xml"
+        },
+        dataType: 'xml',
+        cache: false,
+        success: function (response) {
+          var feedHtml = "<table id='techNewsTable' class='innerFeedTable'><thead><tr><th class='titlecol'></th></tr></thead>";
+          var threadCount = 0;
+          $(response).find("item").each(function() {
+            var item = $(this);
+            /*
+            var htmlElem = $.parseHTML(item.find("description").text());
+            var imgHtml = "";
+
+            $.each(htmlElem, function(i, el) {
+              if (el.nodeName == "IMG") {
+                el.setAttribute("class","rssImg");
+                imgHtml = el.outerHTML;
+                return false;
+              }
+            });
+            */
+
+            feedHtml += "<tr><td><a href='" + item.find("link").text() + "'>" + item.find("title").text() + "</a></td></tr>";
+            threadCount++;
+            if (threadCount >= 20) {
+              return false;
+            }
+          });
+          feedHtml += "</table>";
+          $('#techNewsFeed').html(feedHtml);
+          $('#techNewsFeed').find("td").mouseover(function() {
+            $(this).css("background", "#cce6ff");
+            $(this).siblings("td").css("background", "#cce6ff");
+          });
+
+          $("#techNewsFeed").find("td").mouseout(function() {
+            $(this).css("background", "none");
+            $(this).siblings("td").css("background", "none");
+          });
+        }
+      });
+    </script>
+  </head>
+  <body>
+ 
+   <div class="favorites"> 
+   Favorites:
+   <br>
+   <div class="bookmarkDiv"><a href="https://www.facebook.com"><img class="favicon" title="Facebook" src="https://static.xx.fbcdn.net/rsrc.php/yD/r/d4ZIVX-5C-b.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.gmail.com"><img class="favicon" title="Gmail" src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.woot.com"><img class="favicon" title="Woot!" src="https://www.woot.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.usatoday.com"><img class="favicon" title="USA Today" src="https://www.usatoday.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.amazon.com"><img class="favicon" title="Amazon" src="https://www.amazon.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.nfl.com"><img class="favicon" title="NFL" src="https://static.www.nfl.com/league/run3dfyjniqxah4ehxfu"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.espn.com"><img class="favicon" title="ESPN" src="https://www.espn.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.kttc.com"><img class="favicon" title="KTTC" src="https://www.kttc.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.wunderground.com"><img class="favicon" title="Weather Underground" src="https://www.wunderground.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://www.dealnews.com/?sort=time"><img class="favicon" title="Deal News" src="https://www.dealnews.com/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://slashdot.org"><img class="favicon" title="Deal News" src="https://slashdot.org/favicon.ico"></a></div>
+   <div class="bookmarkDiv"><a href="https://macrumors.com"><img class="favicon" title="MacRumors" src="https://images.macrumors.com/images-new/favicon.ico"></a></div>
+   </div>
+  
+   <script>
+      $(".bookmarkDiv").mouseover(function() {
+        $(this).css("background", "#cce6ff");
+      });
+
+      $(".bookmarkDiv").mouseout(function() {
+        $(this).css("background", "none");
+      });
+   </script> 
+   <div class="weather">
+   Weather:
+   <a class="weatherwidget-io" href="https://forecast7.com/en/44d01n92d64/55920/?unit=us" data-label_1="BYRON" data-label_2="WEATHER" data-theme="original" >BYRON WEATHER</a>
+   </div>
+
+   <div class="feeds">
+   <table id="feedTable">
+     <tr>
+       <td>News:<div class="feedDiv" id="newsFeed">News Loading...</div></td>
+       <td>Deals:<div class="feedDiv" id="dealFeed">Deals Loading...</div></td>
+       <td>Tech News:<div class="feedDiv" id="techNewsFeed">Tech News Loading...</div></td>
+     </tr>
+   </table>
+   </div>
+  </body>
+</html>
